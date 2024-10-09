@@ -1,10 +1,7 @@
+
 .....................................................................................................
-               ..           ..                                         ..           ..
-               ..           .............................................
-               ..           .............................................
-               ..           .............................................
-               ..           ..					       ..           ..
-.....................................................................................................
+
+
 Python Django helper script
 What's up Fellas 
 
@@ -16,8 +13,14 @@ What this script will do ? :
 
 
 change href="style.css" to href="{% static 'style.css' %}"	..
-change src="img.png" to href="{% static 'img.png' %}"		  ..
+
+
+change src="img.png" to href="{% static 'img.png' %}"	
+
+
 change src="script.js" to href="{% static 'script.js' %}"	..
+
+
 .................................................................
 
 Yes You've heard it right this will do that for you automaticly and saves so much time for you
