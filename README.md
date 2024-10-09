@@ -13,6 +13,8 @@ This script will save your time
 What this script will do ? :
 
 .................................................................
+
+
 change href="style.css" to href="{% static 'style.css' %}"	..
 change src="img.png" to href="{% static 'img.png' %}"		  ..
 change src="script.js" to href="{% static 'script.js' %}"	..
