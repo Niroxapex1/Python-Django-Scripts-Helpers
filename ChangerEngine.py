@@ -42,11 +42,24 @@ def revert_to_original_format(original_extensions):
         except Exception as e:
             print(f'خطا در تغییر نام فایل {txt_file} به {original_name}: {e}')
 
+def is_absolute_url(url):
+    """
+    این تابع بررسی می‌کند که آیا یک URL مطلق است یا نسبی.
+    URL‌های مطلق با پروتکل‌هایی مانند http://، https://، //، data: شروع می‌شوند.
+    """
+    absolute_url_patterns = (
+        'http://',
+        'https://',
+        '//',
+        'data:',
+    )
+    return url.startswith(absolute_url_patterns)
+
 def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
     """
     این تابع فایل‌های .txt را پردازش می‌کند تا ویژگی href در تگ‌های <link>، 
     ویژگی src در تگ‌های <script> و ویژگی src در تگ‌های <img> را به قالب {% static '...' %} تغییر دهد
-    مگر اینکه قبلاً شامل {% static %} یا {{ ... }} باشند.
+    مگر اینکه قبلاً شامل {% static %}، {{ ... }} باشند یا URL مطلق باشد.
     همچنین جستجوی متنی مشابه در خطوط انجام می‌دهد و نتایج را در فایل‌های لاگ ذخیره می‌کند.
     """
     search_results = []
@@ -81,9 +94,9 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
                 for match in matches:
                     original_content = match.group(1)
 
-                    # بررسی وجود قالب‌های Django در محتوای href
-                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content:
-                        search_results.append(f'{filename}:{line_num} ---> href="{original_content}" (has {{%}} یا {{}})')
+                    # بررسی وجود قالب‌های Django در محتوای href یا URL مطلق
+                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content or is_absolute_url(original_content):
+                        search_results.append(f'{filename}:{line_num} ---> href="{original_content}" (has {{%}}، {{}} یا URL مطلق)')
                         continue
 
                     # تغییر href به قالب {% static '...' %}
@@ -101,9 +114,9 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
                 for match in matches:
                     original_content = match.group(1)
 
-                    # بررسی وجود قالب‌های Django در محتوای src
-                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content:
-                        search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}} یا {{}})')
+                    # بررسی وجود قالب‌های Django در محتوای src یا URL مطلق
+                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content or is_absolute_url(original_content):
+                        search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}}، {{}} یا URL مطلق)')
                         continue
 
                     # تغییر src به قالب {% static '...' %}
@@ -121,9 +134,9 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
                 for match in matches:
                     original_content = match.group(1)
 
-                    # بررسی وجود قالب‌های Django در محتوای src
-                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content:
-                        search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}} یا {{}})')
+                    # بررسی وجود قالب‌های Django در محتوای src یا URL مطلق
+                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content or is_absolute_url(original_content):
+                        search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}}، {{}} یا URL مطلق)')
                         continue
 
                     # تغییر src به قالب {% static '...' %}
@@ -184,7 +197,7 @@ def find_and_modify_files(directory_path):
 # فراخوانی اصلی برنامه
 if __name__ == "__main__":
     # تعریف مسیر دایرکتوری
-    directory_path = r'C:\Users\Nirox\Desktop\Django helper\templates'  # به مسیر صحیح خود تغییر دهید
+    directory_path = 'templates'  # به مسیر صحیح خود تغییر دهید
 
     # بررسی وجود دایرکتوری
     if not os.path.isdir(directory_path):

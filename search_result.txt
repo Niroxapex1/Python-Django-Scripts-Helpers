@@ -1,0 +1,3 @@
+hm.txt:2 ---> href="{% static " (has {%}، {} یا URL مطلق)
+hm.txt:3 ---> src="{% static " (has {%}، {} یا URL مطلق)
+hm.txt:5 ---> Updated src="{% static 'image.png' %}"
