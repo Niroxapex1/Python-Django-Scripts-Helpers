@@ -42,17 +42,23 @@ def revert_to_original_format(original_extensions):
         except Exception as e:
             print(f'خطا در تغییر نام فایل {txt_file} به {original_name}: {e}')
 
-def modify_href_src_in_files(txt_files):
+def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
     """
-    این تابع فایل‌های .txt را پردازش می‌کند تا ویژگی href در تگ‌های <link> و src در تگ‌های <script> را به قالب {% static '...' %} تغییر دهد
+    این تابع فایل‌های .txt را پردازش می‌کند تا ویژگی href در تگ‌های <link>، 
+    ویژگی src در تگ‌های <script> و ویژگی src در تگ‌های <img> را به قالب {% static '...' %} تغییر دهد
     مگر اینکه قبلاً شامل {% static %} یا {{ ... }} باشند.
+    همچنین جستجوی متنی مشابه در خطوط انجام می‌دهد و نتایج را در فایل‌های لاگ ذخیره می‌کند.
     """
     search_results = []
+    search_sim_results = []
     found_any = False
 
-    # الگوی regex برای پیدا کردن تگ‌های <link> با ویژگی href و تگ‌های <script> با ویژگی src
+    # الگوی regex برای پیدا کردن تگ‌های <link> با ویژگی href
     link_tag_regex = re.compile(r'<link\b[^>]*href\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+    # الگوی regex برای پیدا کردن تگ‌های <script> با ویژگی src
     script_tag_regex = re.compile(r'<script\b[^>]*src\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+    # الگوی regex برای پیدا کردن تگ‌های <img> با ویژگی src
+    img_tag_regex = re.compile(r'<img\b[^>]*src\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
 
     for txt_file in txt_files:
         filename = os.path.basename(txt_file)
@@ -67,6 +73,8 @@ def modify_href_src_in_files(txt_files):
 
         # پردازش هر خط در فایل
         for line_num, line in enumerate(lines, start=1):
+            original_line = line  # نگهداری نسخه اصلی خط برای مقایسه
+
             # پردازش ویژگی href در تگ‌های <link>
             if '<link' in line:
                 matches = link_tag_regex.finditer(line)
@@ -82,9 +90,7 @@ def modify_href_src_in_files(txt_files):
                     new_content = f'{{% static \'{original_content}\' %}}'
                     # جایگزینی محتوای جدید در خط
                     new_href_attribute = f'href="{new_content}"'
-                    # استفاده از تابع sub برای جایگزینی دقیق
-                    line_new = re.sub(r'href\s*=\s*["\']([^"\']+)["\']', new_href_attribute, line, count=1)
-                    lines[line_num - 1] = line_new
+                    line = re.sub(r'href\s*=\s*["\']([^"\']+)["\']', new_href_attribute, line, count=1)
                     search_results.append(f'{filename}:{line_num} ---> Updated href="{new_content}"')
                     modified = True
                     found_any = True
@@ -104,12 +110,38 @@ def modify_href_src_in_files(txt_files):
                     new_content = f'{{% static \'{original_content}\' %}}'
                     # جایگزینی محتوای جدید در خط
                     new_src_attribute = f'src="{new_content}"'
-                    # استفاده از تابع sub برای جایگزینی دقیق
-                    line_new = re.sub(r'src\s*=\s*["\']([^"\']+)["\']', new_src_attribute, line, count=1)
-                    lines[line_num - 1] = line_new
+                    line = re.sub(r'src\s*=\s*["\']([^"\']+)["\']', new_src_attribute, line, count=1)
                     search_results.append(f'{filename}:{line_num} ---> Updated src="{new_content}"')
                     modified = True
                     found_any = True
+
+            # پردازش ویژگی src در تگ‌های <img>
+            if '<img' in line:
+                matches = img_tag_regex.finditer(line)
+                for match in matches:
+                    original_content = match.group(1)
+
+                    # بررسی وجود قالب‌های Django در محتوای src
+                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content:
+                        search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}} یا {{}})')
+                        continue
+
+                    # تغییر src به قالب {% static '...' %}
+                    new_content = f'{{% static \'{original_content}\' %}}'
+                    # جایگزینی محتوای جدید در خط
+                    new_src_attribute = f'src="{new_content}"'
+                    line = re.sub(r'src\s*=\s*["\']([^"\']+)["\']', new_src_attribute, line, count=1)
+                    search_results.append(f'{filename}:{line_num} ---> Updated src="{new_content}"')
+                    modified = True
+                    found_any = True
+
+            # جستجوی متن مشابه در خط
+            if search_sim_text in line:
+                search_sim_results.append(f'{filename}:{line_num} ---> {line.strip()}')
+
+            # به‌روزرسانی خط اگر تغییر کرده باشد
+            if line != original_line:
+                lines[line_num - 1] = line
 
         # نوشتن تغییرات در فایل اگر تغییراتی اعمال شده باشد
         if modified:
@@ -126,19 +158,25 @@ def modify_href_src_in_files(txt_files):
             for result in search_results:
                 search_result.write(f"{result}\n")
 
-    if not found_any:
+    # نوشتن نتایج جستجوی متن مشابه در search_sim.txt
+    if search_sim_results:
+        with open('search_sim.txt', 'w', encoding='utf-8') as search_sim:
+            for sim_result in search_sim_results:
+                search_sim.write(f"{sim_result}\n")
+
+    if not found_any and not search_sim_results:
         print('nop, no one is here')
 
 def find_and_modify_files(directory_path):
     """
-    این تابع اصلی است که فایل‌ها را به .txt تغییر نام می‌دهد، ویژگی href و src را تغییر می‌دهد،
-    و پس از آن نام فایل‌ها را به فرمت اصلی بازمی‌گرداند.
+    این تابع اصلی است که فایل‌ها را به .txt تغییر نام می‌دهد، ویژگی‌های href و src را تغییر می‌دهد،
+    متون مشابه را جستجو می‌کند، و پس از آن نام فایل‌ها را به فرمت اصلی بازمی‌گرداند.
     """
     # تبدیل فایل‌ها به .txt و دریافت نام‌های اصلی
     txt_files, original_extensions = convert_to_txt(directory_path)
 
-    # تغییر ویژگی href و src در فایل‌های .txt
-    modify_href_src_in_files(txt_files)
+    # تغییر ویژگی‌های href و src در فایل‌های .txt و جستجوی متون مشابه
+    modify_href_src_in_files(txt_files, search_sim_text='some_similar_text')  # می‌توانید 'some_similar_text' را تغییر دهید
 
     # بازگرداندن فایل‌ها به فرمت اصلی
     revert_to_original_format(original_extensions)
@@ -146,7 +184,7 @@ def find_and_modify_files(directory_path):
 # فراخوانی اصلی برنامه
 if __name__ == "__main__":
     # تعریف مسیر دایرکتوری
-    directory_path = r'C:\Users\Nirox\Desktop\search\templates'  # به مسیر صحیح خود تغییر دهید
+    directory_path = r'C:\Users\Nirox\Desktop\Django helper\templates'  # به مسیر صحیح خود تغییر دهید
 
     # بررسی وجود دایرکتوری
     if not os.path.isdir(directory_path):
