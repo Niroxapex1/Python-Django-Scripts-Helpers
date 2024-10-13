@@ -1,2 +1,0 @@
-test.txt:1 ---> href="{% static " (has {%}، {} یا URL مطلق)
-test.txt:2 ---> href="http://" (has {%}، {} یا URL مطلق)
