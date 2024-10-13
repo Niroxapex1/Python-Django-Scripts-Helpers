@@ -95,7 +95,9 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
                     original_content = match.group(1)
 
                     # بررسی وجود قالب‌های Django در محتوای href یا URL مطلق
-                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content or is_absolute_url(original_content):
+                    if ('{%' in original_content or '%}' in original_content or 
+                        '{{' in original_content or '}}' in original_content or 
+                        is_absolute_url(original_content)):
                         search_results.append(f'{filename}:{line_num} ---> href="{original_content}" (has {{%}}، {{}} یا URL مطلق)')
                         continue
 
@@ -115,7 +117,9 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
                     original_content = match.group(1)
 
                     # بررسی وجود قالب‌های Django در محتوای src یا URL مطلق
-                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content or is_absolute_url(original_content):
+                    if ('{%' in original_content or '%}' in original_content or 
+                        '{{' in original_content or '}}' in original_content or 
+                        is_absolute_url(original_content)):
                         search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}}، {{}} یا URL مطلق)')
                         continue
 
@@ -135,7 +139,9 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
                     original_content = match.group(1)
 
                     # بررسی وجود قالب‌های Django در محتوای src یا URL مطلق
-                    if '{%' in original_content or '%}' in original_content or '{{' in original_content or '}}' in original_content or is_absolute_url(original_content):
+                    if ('{%' in original_content or '%}' in original_content or 
+                        '{{' in original_content or '}}' in original_content or 
+                        is_absolute_url(original_content)):
                         search_results.append(f'{filename}:{line_num} ---> src="{original_content}" (has {{%}}، {{}} یا URL مطلق)')
                         continue
 
@@ -150,7 +156,7 @@ def modify_href_src_in_files(txt_files, search_sim_text='some_similar_text'):
 
             # جستجوی متن مشابه در خط
             if search_sim_text in line:
-                search_sim_results.append(f'{filename}:{line_num} ---> Not Changed {line.strip()}')
+                search_sim_results.append(f'{filename}:{line_num} ---> {line.strip()}')
 
             # به‌روزرسانی خط اگر تغییر کرده باشد
             if line != original_line:
@@ -191,7 +197,7 @@ def find_and_modify_files(directory_path):
     # تغییر ویژگی‌های href و src در فایل‌های .txt و جستجوی متون مشابه
     modify_href_src_in_files(txt_files, search_sim_text='some_similar_text')  # می‌توانید 'some_similar_text' را تغییر دهید
 
-    # بازگرداندن فایل‌ها به فرمت اصلی
+    # بازگرداندن فایل‌ها به پسوند اصلی
     revert_to_original_format(original_extensions)
 
 # فراخوانی اصلی برنامه
@@ -199,8 +205,8 @@ if __name__ == "__main__":
     # تعریف مسیر دایرکتوری
     directory_path = 'templates'  # به مسیر صحیح خود تغییر دهید
 
-    # بررسی وجود دایرکتوری
-    if not os.path.isdir(directory_path):
-        print(f'دایرکتوری {directory_path} وجود ندارد.')
-    else:
+    # بررسی وجود دایرکتوری 
+    if not os.path.isdir(directory_path): 
+        print(f'دایرکتوری {directory_path} وجود ندارد.') 
+    else: 
         find_and_modify_files(directory_path)
